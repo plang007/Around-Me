@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -19,7 +20,9 @@ type Post struct {
 }
 
 func main() {
-	fmt.Println("Hello, world")
+	fmt.Println("started-service")
+	http.HandleFunc("/post", handlerPost)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func handlerPost(w http.ResponseWriter, r *http.Request) {
