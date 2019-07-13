@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
 
 type Location struct {
 	Lat float64 `json:"lat"`
@@ -16,4 +20,17 @@ type Post struct {
 
 func main() {
 	fmt.Println("Hello, world")
+}
+
+func handlerPost(w http.ResponseWriter, r *http.Request) {
+	// Parse from body of request to get a json object.
+	fmt.Println("Received one post request")
+	decoder := json.NewDecoder(r.Body)
+	var p Post
+	if err := decoder.Decode(&p); err != nil {
+		panic(err)
+		return
+	}
+
+	fmt.Fprintf(w, "Post received: %s\n", p.Message)
 }
