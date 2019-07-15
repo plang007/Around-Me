@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Location struct {
@@ -22,8 +23,13 @@ type Post struct {
 func main() {
 	fmt.Println("started-service")
 	http.HandleFunc("/post", handlerPost)
+	http.HandleFunc("/search", handlerSearch)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+const (
+	DISTANCE = "200km"
+)
 
 func handlerPost(w http.ResponseWriter, r *http.Request) {
 	// Parse from body of request to get a json object.
@@ -36,4 +42,37 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Post received: %s\n", p.Message)
+}
+
+func handlerSearch(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received one request for search")
+	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
+	lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
+	// range is optional
+	ran := DISTANCE
+	if val := r.URL.Query().Get("range"); val != "" {
+		ran = val + "km"
+	}
+
+	fmt.Println("range is ", ran)
+
+	// Return a fake post
+	p := &Post{
+		User:    "1111",
+		Message: "hello word",
+		Location: Location{
+			Lat: lat,
+			Lon: lon,
+		},
+	}
+
+	js, err := json.Marshal(p)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+
 }
