@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	elastic "gopkg.in/olivere/elastic.v3"
@@ -30,6 +31,8 @@ func main() {
 }
 
 const (
+	INDEX    = "around"
+	TYPE     = "post"
 	DISTANCE = "200km"
 )
 
@@ -84,23 +87,23 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
 	fmt.Printf("Found a total of %d post\n", searchResult.TotalHits())
 
-	// Return a fake post
-	p := &Post{
-		User:    "1111",
-		Message: "hello word",
-		Location: Location{
-			Lat: lat,
-			Lon: lon,
-		},
+	var typ Post
+	var ps []Post
+	for _, item := range searchResult.Each(reflect.TypeOf(typ)) { // instance of
+		p := item.(Post) // p = (Post) item
+		fmt.Printf("Post by %s: %s at lat %v and lon %v\n", p.User, p.Message, p.Location.Lat, p.Location.Lon)
+		ps = append(ps, p)
+
 	}
 
-	js, err := json.Marshal(p)
+	js, err := json.Marshal(ps)
 	if err != nil {
 		panic(err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(js)
 
 }
