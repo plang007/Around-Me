@@ -70,6 +70,20 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	q := elastic.NewGeoDistanceQuery("location")
 	q = q.Distance(ran).Lat(lat).Lon(lon)
 
+	searchResult, err := client.Search().
+		Index(INDEX).
+		Query(q).
+		Pretty(true).
+		Do()
+
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
+	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	fmt.Printf("Found a total of %d post\n", searchResult.TotalHits())
+
 	// Return a fake post
 	p := &Post{
 		User:    "1111",
