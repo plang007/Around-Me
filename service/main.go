@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	elastic "gopkg.in/olivere/elastic.v3"
 )
 
 type Location struct {
@@ -48,13 +50,25 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request for search")
 	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
 	lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
+
 	// range is optional
 	ran := DISTANCE
 	if val := r.URL.Query().Get("range"); val != "" {
 		ran = val + "km"
 	}
 
-	fmt.Println("range is ", ran)
+	fmt.Printf("Search received: %f %f %s\n", lat, lon, ran)
+
+	// Create a client
+	client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	// Define geo distance query
+	q := elastic.NewGeoDistanceQuery("location")
+	q = q.Distance(ran).Lat(lat).Lon(lon)
 
 	// Return a fake post
 	p := &Post{
