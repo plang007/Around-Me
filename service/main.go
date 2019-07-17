@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/pborman/uuid"
 	elastic "gopkg.in/olivere/elastic.v3"
 )
 
@@ -77,7 +78,9 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 		return
 	}
-
+	id := uuid.New()
+	// Save to ES
+	saveToES(&p, id)
 	fmt.Fprintf(w, "Post received: %s\n", p.Message)
 }
 
