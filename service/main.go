@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/pborman/uuid"
 	elastic "gopkg.in/olivere/elastic.v3"
@@ -127,8 +128,10 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	for _, item := range searchResult.Each(reflect.TypeOf(typ)) { // instance of
 		p := item.(Post) // p = (Post) item
 		fmt.Printf("Post by %s: %s at lat %v and lon %v\n", p.User, p.Message, p.Location.Lat, p.Location.Lon)
+		if !containsFilteredWords(&p.Message) {
+			ps = append(ps, p)
+		}
 		ps = append(ps, p)
-
 	}
 
 	js, err := json.Marshal(ps)
@@ -166,4 +169,19 @@ func saveToES(p *Post, id string) {
 	}
 
 	fmt.Printf("Post is saved to Index: %s\n", p.Message)
+}
+
+func containsFilteredWords(s *string) bool {
+	filteredWords := []string{
+		"fuck",
+		"100",
+		"shit",
+		"bitch",
+	}
+	for _, word := range filteredWords {
+		if strings.Contains(*s, word) {
+			return true
+		}
+	}
+	return false
 }
